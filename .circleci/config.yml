@@ -1,4 +1,4 @@
-version: 2.1.0
+version: 2.1
 orbs:
   aws-ecr: circleci/aws-ecr@8.2.1
   aws-cli: circleci/aws-cli@3.1.4
@@ -11,7 +11,6 @@ jobs:
       - setup_remote_docker:
           version: 20.10.14
           docker_layer_caching: true
-
       - aws-ecr/build-and-push-image:
           create-repo: true
           dockerfile: Dockerfile
@@ -23,34 +22,25 @@ jobs:
           registry-id: AWS_ECR_REGISTRY_ID
           repo-scan-on-push: true
           tag: latest
-
   continuous-delivery:
     machine: true
     resource_class: ras/haterunner
     steps:
       - aws-cli/setup
-
       - run:
           name: auth to aws ecr
           command: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 963374505303.dkr.ecr.us-east-1.amazonaws.com
-          
-          
-
       - run:
           name: pull image from private repository
           command: docker pull 963374505303.dkr.ecr.us-east-1.amazonaws.com/hatedemo:latest
-          
-      
       - run:
           name: run image
           command: docker run -d -p 8080:8080 963374505303.dkr.ecr.us-east-1.amazonaws.com/hatedemo:latest
 workflows:
+  version: 2
   CICD:
     jobs:
       - continuous-integration
       - continuous-delivery:
           requires:
-          - continuous-integration
-
-
-      
+            - continuous-integration
